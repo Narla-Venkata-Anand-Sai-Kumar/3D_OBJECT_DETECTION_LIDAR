@@ -102,12 +102,16 @@ def main():
             data_dict = demo_dataset.collate_batch([data_dict])
             load_data_to_gpu(data_dict)
             pred_dicts, _ = model.forward(data_dict)
+            pred_dicts_cpu = [{k: v.cpu() for k, v in pred_dict.items()} for pred_dict in pred_dicts]
+            print(pred_dicts_cpu)
             all_points.append(data_dict['points'][:, 1:].cpu().numpy())  # Save points as numpy array
-            all_pred_dicts.append(pred_dicts)
+            print(all_points)
+            all_pred_dicts.append(pred_dicts_cpu)
+            
             save_data = {'points': all_points, 'pred_dicts': all_pred_dicts}
             with open('points_and_predictions.pkl', 'wb') as f:
-                pickle.dump(save_data, f)# Save prediction dictionaries
-            
+                pickle.dump(save_data, f)
+
             V.draw_scenes(
                 points=data_dict['points'][:, 1:], ref_boxes=pred_dicts[0]['pred_boxes'],
                 ref_scores=pred_dicts[0]['pred_scores'], ref_labels=pred_dicts[0]['pred_labels']
