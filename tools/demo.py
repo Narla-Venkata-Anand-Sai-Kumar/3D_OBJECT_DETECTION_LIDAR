@@ -1,3 +1,4 @@
+import pickle
 import argparse
 import glob
 from pathlib import Path
@@ -76,6 +77,7 @@ def parse_config():
     return args, cfg
 
 
+
 def main():
     args, cfg = parse_config()
     logger = common_utils.create_logger()
@@ -90,13 +92,22 @@ def main():
     model.load_params_from_file(filename=args.ckpt, logger=logger, to_cpu=True)
     model.cuda()
     model.eval()
+    
+    all_points = []  # List to store points
+    all_pred_dicts = []  # List to store prediction dictionaries
+    
     with torch.no_grad():
         for idx, data_dict in enumerate(demo_dataset):
             logger.info(f'Visualized sample index: \t{idx + 1}')
             data_dict = demo_dataset.collate_batch([data_dict])
             load_data_to_gpu(data_dict)
             pred_dicts, _ = model.forward(data_dict)
-            print("predictions : \n${pred_dicts}")
+            all_points.append(data_dict['points'][:, 1:].cpu().numpy())  # Save points as numpy array
+            all_pred_dicts.append(pred_dicts)
+            save_data = {'points': all_points, 'pred_dicts': all_pred_dicts}
+            with open('points_and_predictions.pkl', 'wb') as f:
+                pickle.dump(save_data, f)# Save prediction dictionaries
+            
             V.draw_scenes(
                 points=data_dict['points'][:, 1:], ref_boxes=pred_dicts[0]['pred_boxes'],
                 ref_scores=pred_dicts[0]['pred_scores'], ref_labels=pred_dicts[0]['pred_labels']
@@ -106,7 +117,6 @@ def main():
                 mlab.show(stop=True)
 
     logger.info('Demo done.')
-
 
 if __name__ == '__main__':
     main()
