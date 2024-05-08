@@ -109,17 +109,9 @@ def main():
             all_pred_dicts.append(pred_dicts_cpu)
             
             save_data = {'points': all_points, 'pred_dicts': all_pred_dicts}
-            with open('points_and_predictions.pkl', 'wb') as f:
+            with open(f'points_and_predictions{idx}.pkl', 'wb') as f:
                 pickle.dump(save_data, f)
-
-            V.draw_scenes(
-                points=data_dict['points'][:, 1:], ref_boxes=pred_dicts[0]['pred_boxes'],
-                ref_scores=pred_dicts[0]['pred_scores'], ref_labels=pred_dicts[0]['pred_labels']
-            )
-
-            if not OPEN3D_FLAG:
-                mlab.show(stop=True)
-
+            print(f'points_and_predictions{idx}.pkl saved.')
     logger.info('Demo done.')
 
 if __name__ == '__main__':
